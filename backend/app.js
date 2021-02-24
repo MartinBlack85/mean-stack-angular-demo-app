@@ -1,8 +1,21 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+const Post = require('./models/post');
 
 const app = express();
+
+//connecting to mongoDB
+//can define a custom dabase name
+mongoose.connect('mongodb+srv://Martin:sVtczoTlsEKkccoY@cluster0.sa3o8.mongodb.net/mean-stack-tutorialDB?retryWrites=true&w=majority')
+    .then(() => {
+        console.log('Connected to database!');
+    })
+    .catch(() => {
+        console.log('Connection failed!');
+    });
 
 // using a new middleware on the incoming request
 // after next() the request continues and the next middleware function can execute
@@ -23,30 +36,35 @@ app.use((req, res, next) => {
 
 // adding middleware specifically handling POST requests
 app.post('/api/posts', (req, res, next) => {
-    const post = req.body;
-    console.log(post);
-    res.status(201).json({
-        message: 'Post added Successfully'
+    const post = new Post({
+        title: req.body.title,
+        content: req.body.content
+    });
+    //sending and saving data in mongoDB
+    //monggose and mongoDB will automatically query the dabase and insert a new entry (document)
+    post.save().then(createdPost => {
+        res.status(201).json({
+            message: 'Post added Successfully',
+            postId: createdPost._id
+            });
     });
 });
 
 // first argument in use() is a path filter for the url route of this api endpoint
  app.get('/api/posts', (req, res, next) => {
-    const posts = [
-        { 
-            id: 'fewrdf234324', 
-            title: 'First server side post', 
-            content: 'This is coming from the server' 
-        },
-        { 
-            id: 'jituzijk5464', 
-            title: 'Second server side post', 
-            content: 'This is coming from the server!' 
-        }
-    ];
-    res.status(200).json({
-        message: 'Posts fetched successfully!',
-        posts: posts
+    //find() by default returns all entries from mongoDB
+    Post.find().then((documents) => {
+        res.status(200).json({
+            message: 'Posts fetched successfully!',
+            posts: documents
+        });
+    });
+});
+
+app.delete('/api/posts/:id', (req, res, next) => {
+    Post.deleteOne({ _id: req.params.id}).then(result => {
+        console.log(result);
+        res.status(200).json({message: 'Post deleted!'});
     });
 });
 

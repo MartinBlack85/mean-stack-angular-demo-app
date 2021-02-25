@@ -4,3 +4,8 @@ mat-form-field,
 extarea {
     width: 100%;
 }
+
+mat-spinner {
+    margin: auto;
+    
+}

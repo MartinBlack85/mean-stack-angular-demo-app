@@ -1,20 +1,21 @@
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const express = require("express");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
-const Post = require('./models/post');
+//importing the pots routes from the router file component
+const postsRoutes = require("./routes/posts");
 
 const app = express();
 
 //connecting to mongoDB
 //can define a custom dabase name
-mongoose.connect('mongodb+srv://Martin:sVtczoTlsEKkccoY@cluster0.sa3o8.mongodb.net/mean-stack-tutorialDB?retryWrites=true&w=majority')
+mongoose.connect("connectionString")
     .then(() => {
-        console.log('Connected to database!');
+        console.log("Connected to database!");
     })
     .catch(() => {
-        console.log('Connection failed!');
+        console.log("Connection failed!");
     });
 
 // using a new middleware on the incoming request
@@ -28,45 +29,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // adding middleware for enable CORS
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
     next();
 });
 
-// adding middleware specifically handling POST requests
-app.post('/api/posts', (req, res, next) => {
-    const post = new Post({
-        title: req.body.title,
-        content: req.body.content
-    });
-    //sending and saving data in mongoDB
-    //monggose and mongoDB will automatically query the dabase and insert a new entry (document)
-    post.save().then(createdPost => {
-        res.status(201).json({
-            message: 'Post added Successfully',
-            postId: createdPost._id
-            });
-    });
-});
-
-// first argument in use() is a path filter for the url route of this api endpoint
- app.get('/api/posts', (req, res, next) => {
-    //find() by default returns all entries from mongoDB
-    Post.find().then((documents) => {
-        res.status(200).json({
-            message: 'Posts fetched successfully!',
-            posts: documents
-        });
-    });
-});
-
-app.delete('/api/posts/:id', (req, res, next) => {
-    Post.deleteOne({ _id: req.params.id}).then(result => {
-        console.log(result);
-        res.status(200).json({message: 'Post deleted!'});
-    });
-});
+//setup the posts router for use in express
+app.use("/api/posts", postsRoutes);
 
 
 // setting up the node server to export the express serverside app
